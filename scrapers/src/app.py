@@ -118,8 +118,7 @@ class NewsCardScraper():
     def get_news_content(self, href: str):
         response = requests.get(href)
         soup: BeautifulSoup = BeautifulSoup(response.content, "html.parser")
-        paragraphs = soup.findChildren("p")
-        return [paragraph.text for paragraph in paragraphs]
+        return soup.get_text()
 
     def convert_data_to_json(self, tag: bs4.element.Tag) -> dict:
         """
