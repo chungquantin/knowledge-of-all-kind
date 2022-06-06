@@ -4,3 +4,4 @@ pandas
 python-crontab
 webdriver-manager
 selenium
+xvfbwrapper
