@@ -5,68 +5,12 @@ import time
 from typing import Any, Dict, List
 from bs4 import BeautifulSoup
 
-from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
-from webdriver_manager.chrome import ChromeDriverManager
+from utils import *
+from sources import *
+from decorators import timer, debug
 
-
-cmc_data_source: Dict[str, Any] = {
-    "name": "CoinMarketCap News",
-    "base_url": "https://coinmarketcap.com",
-    "url": "https://coinmarketcap.com/headlines/news/",
-    "html": {
-        "card_metadata": {
-            "card_class": "div@sc-16r8icm-0 sc-5q2msl-0 fFalqR",
-            "card_title_class": "a@sc-1eb5slv-0 kLhpLY cmc-link",
-            "img_wrapper_class": "div@cover-image",
-            "href_class": "a@sc-1eb5slv-0 kLhpLY cmc-link",
-            "timestamp_class": "span@sc-1t3hyg7-0 hTMYuT",
-            "author_class": "span@sc-1eb5slv-0 ehYyPC",
-        },
-    }
-}
-
-decrypt_data_source: Dict[str, Any] = {
-    "name": "Decrypt News",
-    "base_url": "https://decrypt.co",
-    "url": "https://decrypt.co/news",
-    "html": {
-        "card_metadata": {
-            "card_class": "div@sc-e83fcda8-1 gcNmAw border-b mobileUI:border-r border-decryptGridline",
-            "card_title_class": "h2@mb-2 font-ak-bold text-base md:text-xl leading-4.5 md:leading-5.5 text-neutral-900 dark:text-primary-200",
-            "img_wrapper_class": "div@md:col-span-3 shrink-0 w-22 md:w-auto mr-3 md:mr-0",
-            "href_class": "a@block",
-            "timestamp_class": "span@font-ak-regular font-normal text-xs md:text-sm text-neutral-700 dark:text-primary-100 leading-3 md:leading-4 whitespace-nowrap",
-            "author_class": "span@font-ak-regular font-normal text-xs md:text-sm text-neutral-700 dark:text-primary-100 leading-3 md:leading-4",
-        },
-    }
-}
-
-
-class HeadlessBrowser():
-    def __init__(self) -> None:
-        self.browser = webdriver.Chrome(ChromeDriverManager().install())
-
-    def get_ssg_page_source(self, url: str):
-        self.browser.get(url)
-        self.browser.find_element_by_tag_name('html').send_keys(Keys.END)
-        time.sleep(15)
-        page_source = self.browser.page_source
-        return page_source
-
-    def scroll_to_bottom(self, url: str, pages: int):
-        no_of_pagedowns = pages
-        self.browser.get(url)
-        time.sleep(1)
-        elem = self.browser.find_element_by_tag_name("html")
-        while no_of_pagedowns:
-            elem.send_keys(Keys.PAGE_DOWN)
-            time.sleep(0.2)
-            no_of_pagedowns -= 1
-
-        page_source = self.browser.page_source
-        self.browser.close()
-        return page_source
+from schedule import repeat, every, run_pending
+import hashlib
 
 
 class NewsCardScraper():
@@ -115,8 +59,9 @@ class NewsCardScraper():
         card_timestamp = tag.findChild(el, {"class": class_name})
         return card_timestamp.text
 
-    def get_news_content(self, href: str):
-        response = requests.get(href)
+    @timer
+    def fetch_news_content(self, href: str):
+        response = requests.get(href, headers=getRequestHeaders())
         soup: BeautifulSoup = BeautifulSoup(response.content, "html.parser")
         return soup.get_text()
 
@@ -126,6 +71,7 @@ class NewsCardScraper():
         """
         img_src = self.get_img(tag)
         title = self.get_title(tag)
+        news_id = hashlib.md5(title.encode()).hexdigest()
         timestamp = self.get_timestamp(tag)
         author = self.get_author(tag)
 
@@ -133,9 +79,10 @@ class NewsCardScraper():
         if not (href.__contains__("https://") or href.__contains__("http://")):
             href = self.data_source["base_url"] + href
 
-        content = self.get_news_content(href)
+        content = self.fetch_news_content(href)
 
         data = {
+            "id": news_id,
             "title": title,
             "href": href,
             "img_src": img_src,
@@ -145,13 +92,16 @@ class NewsCardScraper():
         }
         return data
 
+    @timer
     def process_scrap(self) -> Dict[str, Any]:
         """
             Process scrapping data from source url and do bs4
         """
-        response = requests.get(self.data_source["url"])
+        response = requests.get(
+            self.data_source["url"], headers=getRequestHeaders())
         return self.process_soup(response.content)
 
+    @timer
     def process_scrap_infinite_load(self) -> Dict[str, Any]:
         """
             Using selenium to load infinite web page
@@ -173,7 +123,8 @@ class NewsCardScraper():
 
         return {
             "data": converted_data,
-            "length": len(converted_data)
+            "length": len(converted_data),
+            "timestamp": time.time()
         }
 
 
@@ -183,6 +134,7 @@ def save_json_file(path, data):
 
 
 def scrap_decrypt_news():
+    print("====> Scrapping Decrypt News...")
     decrypt_page_source = HeadlessBrowser().get_ssg_page_source(
         decrypt_data_source["url"])
     scrapped_data = NewsCardScraper(
@@ -191,6 +143,7 @@ def scrap_decrypt_news():
 
 
 def scrap_cmc_news():
+    print("====> Scrapping CoinMarketCap News...")
     scrapped_data = NewsCardScraper(cmc_data_source).process_scrap()
     return scrapped_data
 
@@ -201,8 +154,17 @@ data_source: List[Dict[str, Any]] = [
 ]
 
 
-cmc_json = scrap_cmc_news()
-save_json_file("dataset/coinmarketcap.json", cmc_json)
+@repeat(every().hour)
+@timer
+@debug
+def start_scrapping():
+    cmc_json = scrap_cmc_news()
+    save_json_file("dataset/coinmarketcap.json", cmc_json)
 
-decrypt_json = scrap_decrypt_news()
-save_json_file("dataset/decrypt.json", decrypt_json)
+    decrypt_json = scrap_decrypt_news()
+    save_json_file("dataset/decrypt.json", decrypt_json)
+
+
+while True:
+    run_pending()
+    time.sleep(1)

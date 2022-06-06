@@ -1,15 +1,12 @@
-import os
+import functools
 import time
-import thread
 import warnings
-import signal
 import traceback
-from threading import Timer
 
-__all__=["none", "attempt_retries", "ignore_exception",
-    "asynchronous", "timer", "abstract", "synchronized",
-    "count_calls", "memoized", "deprecated", "time_out",
-    "attempt_retries_details"]
+__all__ = ["none", "attempt_retries", "ignore_exception",
+           "asynchronous", "timer", "abstract", "synchronized",
+           "count_calls", "memoized", "deprecated", "time_out",
+           "attempt_retries_details"]
 
 
 def none(func):
@@ -18,6 +15,7 @@ def none(func):
     Useful for overriding other decorators in mock testing
     """
     return func
+
 
 def attempt_retries(func, retries=3, delay=0.3, IgnoreException=Exception):
     """
@@ -37,8 +35,10 @@ def attempt_retries(func, retries=3, delay=0.3, IgnoreException=Exception):
     return dec
 
 # capture err details
+
+
 def attempt_retries_detailed(func, retries=3,
-    delay=0.3, IgnoreException=Exception):
+                             delay=0.3, IgnoreException=Exception):
     """
     Decorator for ignoring certain exception for certain number
     times and retrying with certain delay
@@ -64,6 +64,7 @@ def attempt_retries_detailed(func, retries=3,
             raise Exception(err)
     return dec
 
+
 def ignore_exception(func):
     """
     Decorator for supressing all exceptions
@@ -76,25 +77,16 @@ def ignore_exception(func):
     return dec
 
 
-def asynchronous(func):
-    """
-    Run function in another thread.
-    Caller with no longer be blocked by this function, but also will not
-    be able to catch exception or get results from function.
-    """
-    def dec(*args, **kwds):
-        thread.start_new_thread(func, args, kwds)
-    return dec
-
-
 def abstract(func):
     """
     Mark function as abstract.
     Function will raise exception unless it is overridden in subclass
     """
     def dec(*args, **kwds):
-        raise Exception("Abstract function %s() must be overridden" % func.__name__)
+        raise Exception(
+            "Abstract function %s() must be overridden" % func.__name__)
     return dec
+
 
 def synchronized(lock):
     """ Synchronization decorator """
@@ -124,12 +116,14 @@ def deprecated(func):
     newFunc.__dict__.update(func.__dict__)
     return newFunc
 
+
 class memoized(object):
     """
     Decorator that caches a function's return value each time it is called.
     If called later with the same arguments, the cached value is returned, and
     not re-evaluated.
     """
+
     def __init__(self, func):
         self.func = func
         self.cache = {}
@@ -150,35 +144,49 @@ class memoized(object):
         return self.func.__doc__
 
 
-class TimedOutException(Exception):
-    def __init__(self, value="timed out"):
-        self.value = value
+def cache(func):
+    """Keep a cache of previous function calls"""
+    @functools.wraps(func)
+    def wrapper_cache(*args, **kwargs):
+        cache_key = args + tuple(kwargs.items())
+        if cache_key not in wrapper_cache.cache:
+            wrapper_cache.cache[cache_key] = func(*args, **kwargs)
+        return wrapper_cache.cache[cache_key]
+    wrapper_cache.cache = dict()
+    return wrapper_cache
 
-    def __str__(self):
-        return repr(self.value)
 
-def time_out(timeout):
-    def decorate(func):
-        def timeout_handler():
-            thread.interrupt_main()
+def timer(func):
+    """Print the runtime of the decorated function"""
+    @functools.wraps(func)
+    def wrapper_timer(*args, **kwargs):
+        start_time = time.perf_counter()    # 1
+        value = func(*args, **kwargs)
+        end_time = time.perf_counter()      # 2
+        run_time = end_time - start_time    # 3
+        print(f"Finished {func.__name__!r} in {run_time:.4f} secs")
+        return value
+    return wrapper_timer
 
-        def new_f(*args, **kwargs):
-            t1 = time.time()
-            timer = Timer(timeout, timeout_handler)
-            timer.start()
-            try:
-                return func(*args, **kwargs)
-            except:
-                if time.time() - t1 >= timeout:
-                    raise TimedOutException("%s timed out after %ss" % (func.__name__, timeout))
-                else:
-                    raise Exception(traceback.format_exc())
-            finally:
-                timer.cancel()
-                timer = None
 
-        new_f.__name__ = func.__name__
-        new_f.__doc__ = func.__doc__
-        new_f.__dict__.update(func.__dict__)
-        return new_f
-    return decorate
+def debug(func):
+    """Print the function signature and return value"""
+    @functools.wraps(func)
+    def wrapper_debug(*args, **kwargs):
+        args_repr = [repr(a) for a in args]                      # 1
+        kwargs_repr = [f"{k}={v!r}" for k, v in kwargs.items()]  # 2
+        signature = ", ".join(args_repr + kwargs_repr)           # 3
+        print(f"Calling {func.__name__}({signature})")
+        value = func(*args, **kwargs)
+        print(f"{func.__name__!r} returned {value!r}")           # 4
+        return value
+    return wrapper_debug
+
+
+PLUGINS = dict()
+
+
+def register(func):
+    """Register a function as a plug-in"""
+    PLUGINS[func.__name__] = func
+    return func
