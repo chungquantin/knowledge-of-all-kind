@@ -3,7 +3,9 @@ import time
 from classes import NewsCardScraper
 from utils import *
 
-import schedule as scheduler
+import schedule
+import schedule
+import threading
 
 
 def save_json_file(path, data):
@@ -11,8 +13,11 @@ def save_json_file(path, data):
         json.dump(data, f, indent=4, sort_keys=True)
 
 
-@scheduler.repeat(scheduler.every().hour)
-@timer
+def run_threaded(job_func):
+    job_thread = threading.Thread(target=job_func)
+    job_thread.start()
+
+
 def scrap_decrypt_news():
     print("====> Scrapping Decrypt News...")
     decrypt_page_source = HeadlessBrowser().get_ssg_page_source(
@@ -22,20 +27,32 @@ def scrap_decrypt_news():
     save_json_file("dataset/decrypt.json", scrapped_data)
 
 
-@scheduler.repeat(scheduler.every().hour)
-@timer
 def scrap_cmc_news():
     print("====> Scrapping CoinMarketCap News...")
     scrapped_data = NewsCardScraper(cmc_data_source).process_scrap()
     save_json_file("dataset/coinmarketcap.json", scrapped_data)
 
 
+@schedule.repeat(schedule.every().hour)
+@timer
+def thread_one():
+    print("==> Run thread 1")
+    run_threaded(scrap_decrypt_news)
+
+
+@schedule.repeat(schedule.every().hour)
+@timer
+def thread_two():
+    print("==> Run thread 2")
+    run_threaded(scrap_cmc_news)
+
+
 @auto_invoked_fn
 def run_app():
     print("==> Running scrapping service...")
     print("==> Remaining job")
-    for job in scheduler.get_jobs():
+    for job in schedule.get_jobs():
         print(f"+ {job}")
     while True:
-        scheduler.run_pending()
+        schedule.run_pending()
         time.sleep(1)

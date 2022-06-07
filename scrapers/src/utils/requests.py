@@ -1,10 +1,12 @@
 import random
 import time
 from typing import Any, Dict
+import requests
 
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from webdriver_manager.chrome import ChromeDriverManager
+
 
 class HeadlessBrowser():
     def __init__(self) -> None:
@@ -31,7 +33,20 @@ class HeadlessBrowser():
         self.browser.close()
         return page_source
 
-def getRequestHeaders() -> Dict[str, Any]:
+
+def get_random_proxies():
+    free_proxies = [
+        {'http': 'http://62.33.210.34:58918', 'https': 'http://194.233.69.41:443'},
+        {'http': 'http://190.64.18.177:80', 'https': 'http://203.193.131.74:3128'},
+    ]
+    proxies = {
+        'free': free_proxies,
+    }
+
+    return random.choice(proxies["free"])
+
+
+def get_request_headers() -> Dict[str, Any]:
     header_list = [
         {
             'authority': 'httpbin.org',
@@ -50,3 +65,8 @@ def getRequestHeaders() -> Dict[str, Any]:
     ]
     headers = random.choice(header_list)
     return headers
+
+
+def avoid_detection_request(url: str):
+    # TODO: Add proxies for avoid detection request
+    return requests.get(url, headers=get_request_headers())

@@ -1,11 +1,10 @@
 import hashlib
 import bs4
-import requests
+import time
 
-from time import time
 from typing import Any, Dict
 from bs4 import BeautifulSoup
-from utils import HeadlessBrowser, getRequestHeaders, timer
+from utils import HeadlessBrowser, timer, avoid_detection_request
 
 
 class NewsCardScraper():
@@ -22,7 +21,7 @@ class NewsCardScraper():
         selector = self.get_card_metadata(field_name).split("@")
         return (selector[0], selector[1])
 
-    def get_img(self, tag: bs4.element.Tag) -> str:
+    def extract_img(self, tag: bs4.element.Tag) -> str:
         (el, class_name) = self.get_selector(
             "img_wrapper_class")
         img_wrapper = tag.findChild(
@@ -34,46 +33,51 @@ class NewsCardScraper():
             return img_src
         return img_wrapper.find("img").get("src")
 
-    def get_title(self, tag: bs4.element.Tag) -> str:
+    def extract_title(self, tag: bs4.element.Tag) -> str:
         (el, class_name) = self.get_selector("card_title_class")
         card_title = tag.findChild(el, {"class": class_name})
         return card_title.text
 
-    def get_href(self, tag: bs4.element.Tag) -> str:
+    def extract_href(self, tag: bs4.element.Tag) -> str:
         (el, class_name) = self.get_selector("href_class")
         card_href = tag.findChild(el, {"class": class_name})
         return card_href.get("href")
 
-    def get_author(self, tag: bs4.element.Tag) -> str:
+    def extract_author(self, tag: bs4.element.Tag) -> str:
         (el, class_name) = self.get_selector("author_class")
         card_authors = tag.findChildren(el, {"class": class_name})
         return [card_author.text for card_author in card_authors]
 
-    def get_timestamp(self, tag: bs4.element.Tag) -> str:
+    def extract_timestamp(self, tag: bs4.element.Tag) -> str:
         (el, class_name) = self.get_selector("timestamp_class")
         card_timestamp = tag.findChild(el, {"class": class_name})
         return card_timestamp.text
 
+    def concat_href(self, href):
+        if not (href.__contains__("https://") or href.__contains__("http://")):
+            href = self.data_source["base_url"] + href
+        return href
+
     @timer
     def fetch_news_content(self, href: str):
-        response = requests.get(href, headers=getRequestHeaders())
-        soup: BeautifulSoup = BeautifulSoup(response.content, "html.parser")
+        """
+         Fetch news content when accessing to the detailed news website
+        """
+        response = avoid_detection_request(href)
+        soup: BeautifulSoup = BeautifulSoup(
+            response.content, "html.parser")
         return soup.get_text()
 
     def convert_data_to_json(self, tag: bs4.element.Tag) -> dict:
         """
             Convert scrapped data to json
         """
-        img_src = self.get_img(tag)
-        title = self.get_title(tag)
+        img_src = self.extract_img(tag)
+        title = self.extract_title(tag)
         news_id = hashlib.md5(title.encode()).hexdigest()
-        timestamp = self.get_timestamp(tag)
-        author = self.get_author(tag)
-
-        href = self.get_href(tag)
-        if not (href.__contains__("https://") or href.__contains__("http://")):
-            href = self.data_source["base_url"] + href
-
+        timestamp = self.extract_timestamp(tag)
+        author = self.extract_author(tag)
+        href = self.concat_href(self.extract_href(tag))
         content = self.fetch_news_content(href)
 
         data = {
@@ -92,8 +96,7 @@ class NewsCardScraper():
         """
             Process scrapping data from source url and do bs4
         """
-        response = requests.get(
-            self.data_source["url"], headers=getRequestHeaders())
+        response = avoid_detection_request(self.data_source["url"])
         return self.process_soup(response.content)
 
     @timer
