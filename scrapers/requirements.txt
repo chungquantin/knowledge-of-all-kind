@@ -1,6 +1,5 @@
 requests
 beautifulsoup4
-pandas
 webdriver-manager
 selenium
 xvfbwrapper
