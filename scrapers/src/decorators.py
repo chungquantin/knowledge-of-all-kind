@@ -183,10 +183,9 @@ def debug(func):
     return wrapper_debug
 
 
-PLUGINS = dict()
-
-
-def register(func):
-    """Register a function as a plug-in"""
-    PLUGINS[func.__name__] = func
-    return func
+def auto_invoked_fn(func):
+    """Self executing function"""
+    @functools.wraps(func)
+    def inner(*args, **kwargs):
+        func(*args, **kwargs)
+    return inner()
