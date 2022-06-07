@@ -1,11 +1,7 @@
 import json
 import time
-from typing import Any, Dict, List
 from classes import NewsCardScraper
-
 from utils import *
-from sources import *
-from decorators import timer, auto_invoked_fn
 
 import schedule as scheduler
 

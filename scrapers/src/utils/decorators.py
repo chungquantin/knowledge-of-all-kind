@@ -4,9 +4,8 @@ import warnings
 import traceback
 
 __all__ = ["none", "attempt_retries", "ignore_exception",
-           "asynchronous", "timer", "abstract", "synchronized",
-           "count_calls", "memoized", "deprecated", "time_out",
-           "attempt_retries_details"]
+           "timer", "abstract", "synchronized", "auto_invoked_fn", "cache", "timer",
+           "memoized", "deprecated", "debug"]
 
 
 def none(func):

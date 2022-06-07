@@ -5,8 +5,7 @@ import requests
 from time import time
 from typing import Any, Dict
 from bs4 import BeautifulSoup
-from decorators import timer
-from utils import HeadlessBrowser, getRequestHeaders
+from utils import HeadlessBrowser, getRequestHeaders, timer
 
 
 class NewsCardScraper():
