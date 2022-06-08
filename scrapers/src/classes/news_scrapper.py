@@ -6,7 +6,6 @@ from typing import Any, Dict
 from bs4 import BeautifulSoup
 from utils import HeadlessBrowser, timer, avoid_detection_request
 
-
 class NewsCardScraper():
     def __init__(self, data_source: Dict[str, Any]) -> None:
         self.data_source = data_source
