@@ -1,0 +1,22 @@
+[32m2022-06-09 00:43:11 +0700[0m - dagster - [34mDEBUG[0m - process_scrap_decrypt_news - 6d795f4c-354a-4cf0-b5f4-1fcd73ffc0af - 42901 - scrap_decrypt_news - LOGS_CAPTURED - Started capturing logs for step: scrap_decrypt_news.
+[32m2022-06-09 00:43:11 +0700[0m - dagster - [34mDEBUG[0m - process_scrap_decrypt_news - 6d795f4c-354a-4cf0-b5f4-1fcd73ffc0af - 42901 - scrap_decrypt_news - STEP_START - Started execution of step "scrap_decrypt_news".
+[32m2022-06-09 00:43:11 +0700[0m - dagster - [34mDEBUG[0m - process_scrap_decrypt_news - 6d795f4c-354a-4cf0-b5f4-1fcd73ffc0af - 42901 - scrap_decrypt_news - LOADED_INPUT - Loaded input "page_source" using input manager "io_manager", from output "result" of step "download_decrypt_page_source"
+[32m2022-06-09 00:43:11 +0700[0m - dagster - [34mDEBUG[0m - process_scrap_decrypt_news - 6d795f4c-354a-4cf0-b5f4-1fcd73ffc0af - 42901 - scrap_decrypt_news - STEP_INPUT - Got input "page_source" of type "Any". (Type check passed).
+[32m2022-06-09 00:43:19 +0700[0m - dagster - [34mERROR[0m - [31mprocess_scrap_decrypt_news - 6d795f4c-354a-4cf0-b5f4-1fcd73ffc0af - 42901 - scrap_decrypt_news - STEP_FAILURE - Execution of step "scrap_decrypt_news" failed.
+
+dagster.core.errors.DagsterExecutionStepExecutionError: Error occurred while executing op "scrap_decrypt_news"::
+
+FileNotFoundError: [Errno 2] No such file or directory: 'dataset/decrypt.json'
+
+Stack Trace:
+  File "/Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-packages/dagster/core/execution/plan/utils.py", line 47, in solid_execution_error_boundary
+    yield
+  File "/Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-packages/dagster/utils/__init__.py", line 406, in iterate_with_context
+    next_output = next(iterator)
+  File "/Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-packages/dagster/core/execution/plan/compute_generator.py", line 66, in _coerce_solid_compute_fn_to_iterator
+    result = fn(context, **kwargs) if context_arg_provided else fn(**kwargs)
+  File "/Users/chungquantin/Desktop/Projects/knowledge-of-all-kind/scrapers/src/scrap_decrypt.py", line 18, in scrap_decrypt_news
+    save_json_file("dataset/decrypt.json", scrapped_data)
+  File "/Users/chungquantin/Desktop/Projects/knowledge-of-all-kind/scrapers/src/utils/file.py", line 5, in save_json_file
+    with open(path, "w+") as f:
+[0m
