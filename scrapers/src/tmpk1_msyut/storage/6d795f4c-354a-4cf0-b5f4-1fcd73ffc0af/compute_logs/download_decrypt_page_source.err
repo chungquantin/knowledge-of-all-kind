@@ -1,9 +1,0 @@
-[32m2022-06-09 00:42:29 +0700[0m - dagster - [34mDEBUG[0m - process_scrap_decrypt_news - 6d795f4c-354a-4cf0-b5f4-1fcd73ffc0af - 42806 - download_decrypt_page_source - LOGS_CAPTURED - Started capturing logs for step: download_decrypt_page_source.
-[32m2022-06-09 00:42:29 +0700[0m - dagster - [34mDEBUG[0m - process_scrap_decrypt_news - 6d795f4c-354a-4cf0-b5f4-1fcd73ffc0af - 42806 - download_decrypt_page_source - STEP_START - Started execution of step "download_decrypt_page_source".
-[WDM] - ====== WebDriver manager ======
-[WDM] - Current google-chrome version is 102.0.5005
-[WDM] - Get LATEST chromedriver version for 102.0.5005 google-chrome
-[WDM] - Driver [/Users/chungquantin/.wdm/drivers/chromedriver/mac64/102.0.5005.61/chromedriver] found in cache
-[32m2022-06-09 00:43:09 +0700[0m - dagster - [34mDEBUG[0m - process_scrap_decrypt_news - 6d795f4c-354a-4cf0-b5f4-1fcd73ffc0af - 42806 - download_decrypt_page_source - STEP_OUTPUT - Yielded output "result" of type "Any". (Type check passed).
-[32m2022-06-09 00:43:09 +0700[0m - dagster - [34mDEBUG[0m - process_scrap_decrypt_news - 6d795f4c-354a-4cf0-b5f4-1fcd73ffc0af - 42806 - download_decrypt_page_source - HANDLED_OUTPUT - Handled output "result" using IO manager "io_manager"
-[32m2022-06-09 00:43:09 +0700[0m - dagster - [34mDEBUG[0m - process_scrap_decrypt_news - 6d795f4c-354a-4cf0-b5f4-1fcd73ffc0af - 42806 - download_decrypt_page_source - STEP_SUCCESS - Finished execution of step "download_decrypt_page_source" in 40.2s.
