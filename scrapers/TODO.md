@@ -1,4 +1,0 @@
-- Migrate to Apache Airflow for scalable scheduling
-- Add parallel scraping for Apache Airflow: https://hevodata.com/learn/airflow-parallelism/
-- Save scraped data in Postgres database
-- Build API

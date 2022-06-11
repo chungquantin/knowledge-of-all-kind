@@ -1,6 +1,0 @@
-requests
-beautifulsoup4
-webdriver-manager
-selenium
-xvfbwrapper
-schedule
