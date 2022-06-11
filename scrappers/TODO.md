@@ -1,4 +1,4 @@
-- Migrate to Apache Airflow for scalable scheduling
-- Add parallel scraping for Apache Airflow: https://hevodata.com/learn/airflow-parallelism/
-- Save scraped data in Postgres database
-- Build API
+- Add parallel executor for Dagster
+- Update decrypt scrap code and add virtual browser (no pop up)
+- Add scheduling
+- Add database connection (S3 bucker with smart open, or big table)
