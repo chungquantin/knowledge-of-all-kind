@@ -1,0 +1,10 @@
+run_storage:
+  module: dagster_postgres.run_storage
+  class: PostgresRunStorage
+  config:
+    postgres_db:
+      username: admin
+      password: secret 
+      hostname: 127.0.0.1
+      db_name: postgres
+      port: 5432

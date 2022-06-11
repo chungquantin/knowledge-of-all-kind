@@ -1,0 +1,1 @@
+from classes.news_scrapper import *

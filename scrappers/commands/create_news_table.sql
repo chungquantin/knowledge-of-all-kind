@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS news (
+ news_id VARCHAR(255) PRIMARY KEY,
+ news_author VARCHAR(30) NOT NULL,
+ news_href VARCHAR(255) NOT NULL,
+ news_timestamp VARCHAR(30) NOT NULL,
+ news_title VARCHAR(255) NOT NULL,
+ news_img_src VARCHAR(255) NOT NULL 
+)
